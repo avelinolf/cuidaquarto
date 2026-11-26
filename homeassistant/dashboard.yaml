@@ -1,0 +1,72 @@
+# Dashboard CuidaQuarto (Lovelace, modo YAML bruto)
+# Como usar: Configuracoes > Dashboards > Adicionar dashboard > "Novo do zero"
+# Abra o dashboard > lapis (editar) > tres pontos > "Editor de configuracao bruto"
+# e cole TODO este conteudo.
+title: CuidaQuarto
+views:
+  - title: Visão geral
+    path: geral
+    icon: mdi:bed
+    cards:
+      - type: markdown
+        content: >-
+          ## Quarto monitorado
+          Modo atual: **{{ states('input_select.modo_quarto') }}**
+
+          Sensor: **{{ 'online' if is_state('binary_sensor.sensor_do_quarto_online','on') else 'OFFLINE' }}**
+
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.temperatura_do_quarto
+            name: Temperatura
+            min: 10
+            max: 45
+            needle: true
+            severity:
+              green: 18
+              yellow: 28
+              red: 30
+          - type: gauge
+            entity: sensor.umidade_do_quarto
+            name: Umidade
+            min: 0
+            max: 100
+            needle: true
+            severity:
+              red: 0
+              yellow: 30
+              green: 40
+
+      - type: entities
+        title: Modo do quarto
+        entities:
+          - entity: input_select.modo_quarto
+
+      - type: entities
+        title: Dispositivos
+        entities:
+          - entity: switch.ventilador
+          - entity: switch.luz_noturna
+          - entity: switch.umidificador
+
+  - title: Histórico
+    path: historico
+    icon: mdi:chart-line
+    cards:
+      - type: history-graph
+        title: Temperatura (últimas 6 h)
+        hours_to_show: 6
+        entities:
+          - entity: sensor.temperatura_do_quarto
+      - type: history-graph
+        title: Umidade (últimas 6 h)
+        hours_to_show: 6
+        entities:
+          - entity: sensor.umidade_do_quarto
+      - type: history-graph
+        title: Ventilador e conectividade do sensor
+        hours_to_show: 6
+        entities:
+          - entity: switch.ventilador
+          - entity: binary_sensor.sensor_do_quarto_online
