@@ -1,0 +1,52 @@
+# Automacoes DETERMINISTICAS (sem LLM). Continuam funcionando se o agente cair.
+# O bot resolve "destino: autorizados" para a lista de numeros do .env,
+# entao nenhum telefone fica neste arquivo.
+
+- id: cq_alerta_temp_alta
+  alias: "Alerta: temperatura >= 30 C"
+  description: "Requisito 3 do projeto - avisa no WhatsApp"
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.temperatura_do_quarto
+      above: 29.99
+      for: "00:00:30"
+  actions:
+    - action: mqtt.publish
+      data:
+        topic: "bot/saida"
+        payload: >-
+          {{ {"destino": "autorizados",
+              "texto": "🔥 ALERTA: quarto a " ~ states('sensor.temperatura_do_quarto') ~ " °C (modo " ~ states('input_select.modo_quarto') ~ "). Responda /ligar ventilador ou pergunte ao assistente."} | tojson }}
+  mode: single
+
+- id: cq_alerta_sensor_offline
+  alias: "Alerta: sensor sem comunicacao"
+  triggers:
+    - trigger: state
+      entity_id: binary_sensor.sensor_do_quarto_online
+      to: "off"
+      for: "00:01:00"
+  actions:
+    - action: mqtt.publish
+      data:
+        topic: "bot/saida"
+        payload: >-
+          {{ {"destino": "autorizados",
+              "texto": "⚠️ O sensor do quarto parou de responder. Verifique o quarto."} | tojson }}
+  mode: single
+
+- id: cq_alerta_umidade_baixa
+  alias: "Alerta: umidade < 30 %"
+  triggers:
+    - trigger: numeric_state
+      entity_id: sensor.umidade_do_quarto
+      below: 30
+      for: "00:01:00"
+  actions:
+    - action: mqtt.publish
+      data:
+        topic: "bot/saida"
+        payload: >-
+          {{ {"destino": "autorizados",
+              "texto": "💧 Umidade baixa: " ~ states('sensor.umidade_do_quarto') ~ " %. Considere ligar o umidificador."} | tojson }}
+  mode: single

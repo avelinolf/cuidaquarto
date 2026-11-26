@@ -1,0 +1,80 @@
+# Configuracao base do Home Assistant - CuidaQuarto
+# A conexao com o broker e feita pela interface:
+#   Configuracoes > Dispositivos e servicos > Adicionar integracao > MQTT
+#   Broker: mosquitto  | Porta: 1883   (nome do servico no docker-compose)
+
+default_config:
+
+automation: !include automations.yaml
+
+# Modo do quarto (idoso / crianca / dormir) escolhido no dashboard
+input_select:
+  modo_quarto:
+    name: Modo do quarto
+    options:
+      - idoso
+      - crianca
+      - dormir
+    initial: idoso
+    icon: mdi:bed
+
+mqtt:
+  sensor:
+    - name: "Temperatura do quarto"
+      unique_id: cq_temperatura
+      state_topic: "cuidaquarto/sensor/temperatura"
+      unit_of_measurement: "°C"
+      device_class: temperature
+      state_class: measurement
+      availability:
+        - topic: "cuidaquarto/sensor/status"
+          payload_available: "online"
+          payload_not_available: "offline"
+
+    - name: "Umidade do quarto"
+      unique_id: cq_umidade
+      state_topic: "cuidaquarto/sensor/umidade"
+      unit_of_measurement: "%"
+      device_class: humidity
+      state_class: measurement
+      availability:
+        - topic: "cuidaquarto/sensor/status"
+          payload_available: "online"
+          payload_not_available: "offline"
+
+  binary_sensor:
+    - name: "Sensor do quarto online"
+      unique_id: cq_sensor_online
+      state_topic: "cuidaquarto/sensor/status"
+      payload_on: "online"
+      payload_off: "offline"
+      device_class: connectivity
+
+  # Dispositivos controlaveis (comando em .../set, estado em .../state)
+  switch:
+    - name: "Ventilador"
+      unique_id: cq_ventilador
+      command_topic: "cuidaquarto/dispositivo/ventilador/set"
+      state_topic: "cuidaquarto/dispositivo/ventilador/state"
+      payload_on: "ON"
+      payload_off: "OFF"
+      icon: mdi:fan
+      optimistic: false
+
+    - name: "Luz noturna"
+      unique_id: cq_luz
+      command_topic: "cuidaquarto/dispositivo/luz/set"
+      state_topic: "cuidaquarto/dispositivo/luz/state"
+      payload_on: "ON"
+      payload_off: "OFF"
+      icon: mdi:lightbulb-night
+      optimistic: false
+
+    - name: "Umidificador"
+      unique_id: cq_umidificador
+      command_topic: "cuidaquarto/dispositivo/umidificador/set"
+      state_topic: "cuidaquarto/dispositivo/umidificador/state"
+      payload_on: "ON"
+      payload_off: "OFF"
+      icon: mdi:air-humidifier
+      optimistic: false
